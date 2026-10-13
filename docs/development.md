@@ -6,7 +6,7 @@ ReadingHub is a single repository:
 - `apps/web` — React dashboard
 - `apps/extension` — Chrome extension (Manifest V3, WXT)
 - `fixtures` — saved HTML used by extension tests
-- `deploy` — Compose files and Caddy
+- `deploy` — Compose files and the Nginx site
 
 ## Database
 
