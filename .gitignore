@@ -1,0 +1,38 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+**/appsettings.*.local.json
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+TestResults/
+coverage/
+
+# Node
+**/node_modules/
+**/dist/
+**/.vite/
+**/.wxt/
+**/.output/
+*.tsbuildinfo
+
+# Data Protection keys, database files, Docker volumes
+keys/
+**/*.pfx
+deploy/data/
+*.pgdata
+
+# IDE and OS
+.vs/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

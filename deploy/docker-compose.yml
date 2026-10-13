@@ -1,0 +1,61 @@
+services:
+  caddy:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      READINGHUB_DOMAIN: ${READINGHUB_DOMAIN}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      readinghub-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  readinghub-api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Database: Host=readinghub-db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Auth__JwtSigningKey: ${JWT_SIGNING_KEY}
+      Cors__WebOrigin: https://${READINGHUB_DOMAIN}
+      DataProtection__KeyPath: /keys
+    volumes:
+      - dp_keys:/keys
+    depends_on:
+      readinghub-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  readinghub-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  dp_keys:
+  caddy_data:
+  caddy_config:

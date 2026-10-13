@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/apps/" />
+  <Folder Name="/apps/api/">
+    <Project Path="apps/api/ReadingHub.Api.Tests/ReadingHub.Api.Tests.csproj" />
+    <Project Path="apps/api/ReadingHub.Api/ReadingHub.Api.csproj" />
+  </Folder>
+</Solution>

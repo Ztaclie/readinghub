@@ -1,0 +1,11 @@
+**/.git
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.wxt
+**/.output
+**/keys
+**/.env
+**/.env.*
+!**/.env.example

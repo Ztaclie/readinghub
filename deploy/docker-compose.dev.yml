@@ -1,0 +1,19 @@
+services:
+  readinghub-db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: readinghub
+      POSTGRES_PASSWORD: readinghub
+      POSTGRES_DB: readinghub
+    volumes:
+      - pg_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U readinghub -d readinghub"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pg_dev:
