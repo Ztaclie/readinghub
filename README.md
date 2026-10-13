@@ -44,7 +44,7 @@ API tests start PostgreSQL with Testcontainers, so Docker needs to be running.
 
 ## Deploy
 
-Production is two containers, the API and PostgreSQL, with Nginx on the host serving the dashboard. Install Node.js 24 on that server, run `npm ci` and `npm run build` in `apps/web`, and copy `dist` to the Nginx root. The API listens on `127.0.0.1:5080` only.
+Production is two containers, the API and PostgreSQL. Nginx on the host serves the dashboard over HTTP on port 80, and Cloudflare terminates HTTPS. This server has Docker and no Node.js, so build the dashboard with a one-off `node:24-alpine` container and copy `apps/web/dist` to `/var/www/readinghub`. The API listens on `127.0.0.1:5080` only.
 
 See [docs/deployment.md](docs/deployment.md) and [docs/backup-restore.md](docs/backup-restore.md).
 
