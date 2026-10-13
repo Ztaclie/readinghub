@@ -25,7 +25,7 @@ The volume name is prefixed by the Compose project name. Check `docker volume ls
 1. Stop the API so nothing writes during the restore:
 
 ```powershell
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml stop readinghub-api caddy
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml stop readinghub-api
 ```
 
 2. Restore the database into the running Postgres container:
