@@ -1,6 +1,6 @@
 # Deployment
 
-Production Compose runs two services: the API and PostgreSQL. PostgreSQL has no published port. The API is published only on `127.0.0.1:5080`. Nginx on the server serves the dashboard and proxies `/api`, `/openapi`, and `/health` to that address.
+Production Compose runs two services: the API and PostgreSQL. PostgreSQL has no published port. The API is published only on `127.0.0.1:5080`. Nginx on the server serves the dashboard over HTTP on port 80 and proxies `/api`, `/openapi`, and `/health` to that address. Cloudflare terminates HTTPS, so visitors still open `https://` the public hostname.
 
 Run one API container. Startup takes an advisory lock and then applies migrations.
 
@@ -14,17 +14,19 @@ copy deploy\.env.example deploy\.env
 
 `JWT_SIGNING_KEY` must be a random string of at least 32 characters. `READINGHUB_DOMAIN` is the public hostname, used as `https://` plus that name for `Cors__WebOrigin`. `POSTGRES_PASSWORD` is the database password.
 
-2. Install Node.js 24 on the server if it is not already installed, then build the dashboard from the repository root:
+2. This server has Docker and no Node.js. Build the dashboard with a one-off container from the repository root:
 
 ```powershell
-cd apps/web
-npm ci
-npm run build
+docker run --rm -v "$PWD/apps/web:/src" -w /src node:24-alpine sh -c "npm ci && npm run build"
 ```
 
-Copy `apps/web/dist` to the directory named by `root` in `deploy/nginx/readinghub.conf` (`/var/www/readinghub` unless you change it).
+Copy `apps/web/dist` to `/var/www/readinghub`.
 
-3. Edit `deploy/nginx/readinghub.conf` so `server_name` is `READINGHUB_DOMAIN`. Put this hostname's certificate at the `ssl_certificate` paths in that file, then enable the site and reload Nginx. The site listens on ports 80 and 443 for this hostname only. Port 80 redirects to HTTPS.
+3. In `deploy/nginx/readinghub.conf`, set `server_name` to the public hostname before enabling the site. The committed name is `reading.example.com`. The site listens on port 80 only and is not the default server. Enable it only after the configuration test passes, then reload Nginx:
+
+```powershell
+nginx -t
+```
 
 4. Start the API and database from the repository root:
 
@@ -36,21 +38,18 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build
 
 6. Point the extension build at the same origin with `READINGHUB_API_ORIGIN` before `npm run build` in `apps/extension`.
 
-Do not publish Postgres on the host. Data Protection keys live in the `dp_keys` volume so logins survive API restarts.
+Do not publish Postgres on the host. Do not bind ports 80 or 443 from Compose. Data Protection keys live in the `dp_keys` volume so logins survive API restarts.
 
 ## Upgrades
 
-Pull the new code, rebuild the dashboard, copy `apps/web/dist` into the Nginx root again, and rebuild the containers:
+Pull the new code, rebuild the dashboard in a one-off container, copy `apps/web/dist` to `/var/www/readinghub` again, and rebuild the containers:
 
 ```powershell
-cd apps/web
-npm ci
-npm run build
-cd ../..
+docker run --rm -v "$PWD/apps/web:/src" -w /src node:24-alpine sh -c "npm ci && npm run build"
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build
 ```
 
-Migrations run when the API starts. Take a database backup first. Reload Nginx only when `deploy/nginx/readinghub.conf` changed.
+Migrations run when the API starts. Take a database backup first. When `deploy/nginx/readinghub.conf` changed, run `nginx -t` and reload Nginx only if that test passes.
 
 ## Logs and health
 
